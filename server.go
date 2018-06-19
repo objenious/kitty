@@ -75,7 +75,7 @@ func (s *Server) Run(ctx context.Context) error {
 	}
 	// parse address for host, port
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
 	select {
 	case sig := <-ch:
 		s.logger.Log("msg", "received signal", "signal", sig)
