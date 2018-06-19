@@ -57,7 +57,7 @@ func TestServer(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Error("Server.Run has not stopped after 1sec")
 	case err := <-exitError:
-		if err != nil {
+		if err != nil && err != context.Canceled {
 			t.Errorf("Server.Run returned an error : %s", err)
 		}
 	}
