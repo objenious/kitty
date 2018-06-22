@@ -104,4 +104,4 @@ kitty is heavily inspired by gizmo/kit (https://godoc.org/github.com/NYTimes/giz
 
 ## License
 
-TBD
+MIT - See LICENSE file
