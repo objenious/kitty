@@ -43,7 +43,7 @@ type Server struct {
 type contextKey int
 
 const (
-	// key for logger
+	// context key for logger
 	logKey contextKey = iota
 )
 
@@ -73,7 +73,6 @@ func (s *Server) Run(ctx context.Context) error {
 	if err := s.start(ctx); err != nil {
 		return err
 	}
-	// parse address for host, port
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
 	select {
@@ -125,14 +124,12 @@ func (s *Server) start(ctx context.Context) error {
 	go func() {
 		err := s.svr.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			s.logger.Log(
-				"error", err,
-				"msg", "HTTP server error - initiating shutting down")
+			s.logger.Log("msg", fmt.Sprintf("Shutting down due to server error: %s", err))
 			s.stop()
 		}
 	}()
 
-	s.logger.Log("msg", fmt.Sprintf("listening on HTTP port: %d", s.cfg.HTTPPort))
+	s.logger.Log("msg", fmt.Sprintf("Listening on port: %d", s.cfg.HTTPPort))
 
 	go func() {
 		exit := <-s.exit
@@ -160,7 +157,6 @@ func registerPProf(cfg Config, mux Router) {
 	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/profile"}, http.HandlerFunc(pprof.Profile))
 	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/symbol"}, http.HandlerFunc(pprof.Symbol))
 	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/trace"}, http.HandlerFunc(pprof.Trace))
-	// Manually add support for paths linked to by index page at /debug/pprof/
 	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/goroutine"}, pprof.Handler("goroutine"))
 	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/heap"}, pprof.Handler("heap"))
 	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/threadcreate"}, pprof.Handler("threadcreate"))

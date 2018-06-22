@@ -17,6 +17,7 @@ func (s *Server) Readiness(h http.HandlerFunc) *Server {
 	return s
 }
 
+// defaultHealthcheck is a default health handler that returns a 200 status and an "OK" body
 func defaultHealthcheck(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
