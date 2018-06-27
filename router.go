@@ -8,7 +8,7 @@ import (
 type Router interface {
 	// Handle registers a handler to the router.
 	// Multiple methods and paths can be configured.
-	Handle(method []string, path []string, handler http.Handler)
+	Handle(method string, path string, handler http.Handler)
 	// SetNotFoundHandler will sets the NotFound handler.
 	SetNotFoundHandler(handler http.Handler)
 	// ServeHTTP dispatches the handler registered in the matched route.
@@ -48,20 +48,14 @@ type stdlibRouter struct {
 }
 
 // Handle registers a handler to the router.
-func (g *stdlibRouter) Handle(methods, paths []string, h http.Handler) {
-	mc := map[string]struct{}{}
-	for _, method := range methods {
-		mc[method] = struct{}{}
-	}
-	for _, path := range paths {
-		g.mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-			if _, found := mc[r.Method]; found {
-				h.ServeHTTP(w, r)
-				return
-			}
-			http.NotFound(w, r)
-		})
-	}
+func (g *stdlibRouter) Handle(method, path string, h http.Handler) {
+	g.mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == method {
+			h.ServeHTTP(w, r)
+			return
+		}
+		http.NotFound(w, r)
+	})
 }
 
 // SetNotFoundHandler will do nothing as we cannot override the Not Found handler from the stdlib.

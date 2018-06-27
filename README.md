@@ -24,8 +24,8 @@ Server-side
 ```
 kitty.NewServer().Config(kitty.Config{HTTPPort: 8081}).
   Router(gorilla.Router()).
-  HTTPEndpoint(Foo, kitty.Method("POST"), kitty.Path("/foo"), kitty.Decoder(decodeFooRequest)).
-  HTTPEndpoint(Bar, kitty.Method("GET"), kitty.Path("/bar")).
+  HTTPEndpoint("POST", "/foo", Foo, kitty.Decoder(decodeFooRequest)).
+  HTTPEndpoint("GET", "/bar", Bar).
   Run(ctx)
 
 // Foo is a go-kit Endpoint
