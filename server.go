@@ -2,7 +2,6 @@ package kitty
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
@@ -93,13 +92,7 @@ func (s *Server) register() error {
 
 	// register endpoints
 	for _, ep := range s.endpoints {
-		if len(ep.methods) == 0 {
-			return errors.New("missing methods in handler")
-		}
-		if len(ep.paths) == 0 {
-			return errors.New("missing paths in handler")
-		}
-		s.mux.Handle(ep.methods, ep.paths,
+		s.mux.Handle(ep.method, ep.path,
 			httptransport.NewServer(
 				s.middleware(ep.endpoint),
 				ep.decoder,
@@ -108,8 +101,8 @@ func (s *Server) register() error {
 	}
 
 	// register health handlers
-	s.mux.Handle([]string{http.MethodGet}, []string{s.cfg.LivenessCheckPath}, http.HandlerFunc(s.liveness))
-	s.mux.Handle([]string{http.MethodGet}, []string{s.cfg.ReadinessCheckPath}, http.HandlerFunc(s.readiness))
+	s.mux.Handle("GET", s.cfg.LivenessCheckPath, http.HandlerFunc(s.liveness))
+	s.mux.Handle("GET", s.cfg.ReadinessCheckPath, http.HandlerFunc(s.readiness))
 
 	// register pprof handlers
 	registerPProf(s.cfg, s.mux)
@@ -152,13 +145,13 @@ func registerPProf(cfg Config, mux Router) {
 	if !cfg.EnablePProf {
 		return
 	}
-	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/"}, http.HandlerFunc(pprof.Index))
-	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/cmdline"}, http.HandlerFunc(pprof.Cmdline))
-	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/profile"}, http.HandlerFunc(pprof.Profile))
-	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/symbol"}, http.HandlerFunc(pprof.Symbol))
-	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/trace"}, http.HandlerFunc(pprof.Trace))
-	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/goroutine"}, pprof.Handler("goroutine"))
-	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/heap"}, pprof.Handler("heap"))
-	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/threadcreate"}, pprof.Handler("threadcreate"))
-	mux.Handle([]string{http.MethodGet}, []string{"/debug/pprof/block"}, pprof.Handler("block"))
+	mux.Handle("GET", "/debug/pprof/", http.HandlerFunc(pprof.Index))
+	mux.Handle("GET", "/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+	mux.Handle("GET", "/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+	mux.Handle("GET", "/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+	mux.Handle("GET", "/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+	mux.Handle("GET", "/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	mux.Handle("GET", "/debug/pprof/heap", pprof.Handler("heap"))
+	mux.Handle("GET", "/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	mux.Handle("GET", "/debug/pprof/block", pprof.Handler("block"))
 }

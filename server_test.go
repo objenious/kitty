@@ -12,7 +12,7 @@ import (
 func TestServer(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	exitError := make(chan error)
-	srv := NewServer().HTTPEndpoint(testEP, Path("/foo"), Method("GET"))
+	srv := NewServer().HTTPEndpoint("GET", "/foo", testEP)
 	go func() {
 		exitError <- srv.Run(ctx)
 	}()

@@ -19,10 +19,8 @@ func Router() kitty.Router {
 }
 
 // Handle registers a handler to the router.
-func (g *router) Handle(methods, paths []string, h http.Handler) {
-	for _, path := range paths {
-		g.mux.Handle(path, h).Methods(methods...)
-	}
+func (g *router) Handle(method, path string, h http.Handler) {
+	g.mux.Handle(path, h).Methods(method)
 }
 
 // SetNotFoundHandler will sets the NotFound handler.
