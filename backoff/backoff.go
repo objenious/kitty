@@ -3,12 +3,12 @@ package backoff
 import (
 	"context"
 
-	"github.com/cenk/backoff"
+	"github.com/cenkalti/backoff"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/objenious/kitty"
 )
 
-// NewBackoff creates an exponential backoff middleware, based on github.com/cenk/backoff.
+// NewBackoff creates an exponential backoff middleware, based on github.com/cenkalti/backoff.
 // Retries will be attemped if the returned error implements is retryable (see kitty.IsRetryable).
 func NewBackoff(bo backoff.BackOff) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
