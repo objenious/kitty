@@ -40,12 +40,6 @@ func (s *Server) LogContext(keys ...string) *Server {
 	return s
 }
 
-// Logger will return the logger that has been injected into the context by the kitty
-// server. This function can only be called from an endpoint.
-func Logger(ctx context.Context) log.Logger {
-	return ctx.Value(logKey).(log.Logger)
-}
-
 func (s *Server) addLoggerToContext(ctx context.Context, _ *http.Request) context.Context {
 	l := s.logger
 	for _, k := range s.logkeys {
@@ -54,4 +48,18 @@ func (s *Server) addLoggerToContext(ctx context.Context, _ *http.Request) contex
 		}
 	}
 	return context.WithValue(ctx, logKey, l)
+}
+
+// Logger will return the logger that has been injected into the context by the kitty
+// server. This function can only be called from an endpoint.
+func Logger(ctx context.Context) log.Logger {
+	return ctx.Value(logKey).(log.Logger)
+}
+
+// LogMessage will log a message.
+// This function can only be called from an endpoint.
+func LogMessage(ctx context.Context, msg string, keyvals ...interface{}) error {
+	l := Logger(ctx)
+	keyvals = append(keyvals, "msg", msg)
+	return l.Log(keyvals...)
 }

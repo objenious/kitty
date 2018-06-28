@@ -42,39 +42,47 @@ func (s *Server) HTTPMiddlewares(m ...func(http.Handler) http.Handler) *Server {
 	return s
 }
 
+// LogOption is a LogEndpoint middleware option
+type LogOption int
+
+const (
+	LogRequest LogOption = iota
+	LogResponse
+	LogErrors
+)
+
 // LogEndpoint creates a middleware that logs Endpoint calls.
-// If "request" is specified, the enpoint request will be logged before the endpoint.
-// If "response" is specified, the endpoint response will be logged after.
-// In all cases, the duration and HTTP status code will be logged.
-func LogEndpoint(fields ...string) endpoint.Middleware {
-	var logrequest, logresponse bool
+// If LogRequest is specified, the endpoint request will be logged before the endpoint is called.
+// If LogResponse is specified, the endpoint response will be logged after.
+// If LogErrors is specified, the endpoint request will be logged if the endpoint returns an error.
+// With LogResponse and LogErrors, the endpoint duration and result HTTP status code will be added to logs.
+func LogEndpoint(fields ...LogOption) endpoint.Middleware {
+	opts := map[LogOption]bool{}
 	for _, f := range fields {
-		switch f {
-		case "request":
-			logrequest = true
-		case "response":
-			logresponse = true
-		}
+		opts[f] = true
 	}
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-			l := Logger(ctx)
-			if logrequest {
-				l.Log("msg", fmt.Sprintf("request: %+v", request))
+			if opts[LogRequest] {
+				LogMessage(ctx, fmt.Sprintf("request: %+v", request))
 			}
 			start := time.Now()
 			response, err = e(ctx, request)
-			code := http.StatusInternalServerError
-			if sc, ok := err.(httptransport.StatusCoder); ok {
-				code = sc.StatusCode()
+			code := http.StatusOK
+			if err != nil {
+				code = http.StatusInternalServerError
+				if sc, ok := err.(httptransport.StatusCoder); ok {
+					code = sc.StatusCode()
+				}
 			}
-			var msg string
-			if logresponse {
-				msg = fmt.Sprintf("response: %+v", response)
-			} else {
-				msg = "response"
+			switch {
+			case opts[LogResponse]:
+				LogMessage(ctx, fmt.Sprintf("response: %+v", response), "status", code, "duration", time.Since(start))
+			case opts[LogErrors] && err != nil:
+				LogMessage(ctx, fmt.Sprintf("request: %+v", request), "error", err, "status", code, "duration", time.Since(start))
+			default:
+				return
 			}
-			l.Log("msg", msg, "status", code, "duration", time.Since(start))
 			return
 		}
 	}
