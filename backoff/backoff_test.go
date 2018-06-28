@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cenk/backoff"
+	"github.com/cenkalti/backoff"
 	"github.com/go-kit/kit/endpoint"
 )
 
