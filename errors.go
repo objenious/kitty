@@ -28,6 +28,22 @@ func IsRetryable(err error) bool {
 	return false
 }
 
+type retryableError struct {
+	error
+}
+
+func (_ retryableError) Retryable() bool {
+	return true
+}
+
+var _ error = retryableError{}
+var _ Retryabler = retryableError{}
+
+// Retryable defines an error as retryable.
+func Retryable(err error) error {
+	return retryableError{error: err}
+}
+
 // HTTPError builds an error based on a http.Response. If status code is < 300 or 304, nil is returned.
 // 429, 5XX errors are Retryable.
 func HTTPError(resp *http.Response) error {
