@@ -25,6 +25,9 @@ func NewCircuitBreaker(cb *gobreaker.CircuitBreaker) endpoint.Middleware {
 				}
 				return cbResponse{res: res, err: err}, nil
 			})
+			if err == gobreaker.ErrOpenState || err == gobreaker.ErrTooManyRequests {
+				return nil, kitty.Retryable(err)
+			}
 			if cbres, ok := res.(cbResponse); ok {
 				return cbres.res, cbres.err
 			}
