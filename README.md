@@ -1,5 +1,7 @@
 # kitty
-[![Travis-CI](https://travis-ci.org/objenious/kitty.svg)](https://travis-ci.org/objenious/kitty)  [![GoDoc](https://godoc.org/github.com/objenious/kitty?status.svg)](http://godoc.org/github.com/objenious/kitty)
+[![Travis-CI](https://travis-ci.org/objenious/kitty.svg?branch=master)](https://travis-ci.org/objenious/kitty)  [![GoDoc](https://godoc.org/github.com/objenious/kitty?status.svg)](http://godoc.org/github.com/objenious/kitty)
+[![GoReportCard](https://goreportcard.com/badge/github.com/objenious/kitty)](https://goreportcard.com/report/github.com/objenious/kitty)
+[![Coverage Status](https://coveralls.io/repos/github/objenious/kitty/badge.svg?branch=master)](https://coveralls.io/github/objenious/kitty?branch=master)
 
 `go get github.com/objenious/kitty`
 
