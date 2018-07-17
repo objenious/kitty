@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/objenious/kitty"
 	"github.com/sony/gobreaker"
 )
 
@@ -28,8 +29,11 @@ func TestCircuitBreaker(t *testing.T) {
 			t.Error("the circuit breaker should return an error")
 		}
 		_, err = e(context.TODO(), nil)
-		if err == nil {
-			t.Error("the circuit breaker should return an error")
+		if err.Error() != gobreaker.ErrOpenState.Error() {
+			t.Error("the circuit breaker should trigger")
+		}
+		if !kitty.IsRetryable(err) {
+			t.Error("circuit breaker errors should be retryable")
 		}
 		if called > 1 {
 			t.Error("retryable errors should trigger the circuit breaker")
