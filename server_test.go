@@ -1,8 +1,10 @@
 package kitty
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"reflect"
 	"testing"
@@ -12,7 +14,9 @@ import (
 func TestServer(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	exitError := make(chan error)
-	srv := NewServer().HTTPEndpoint("GET", "/foo", testEP)
+	srv := NewServer().
+		HTTPEndpoint("POST", "/foo", testEP, Decoder(goodDecoder)).
+		HTTPEndpoint("GET", "/decoding_error", testEP, Decoder(badDecoder))
 	go func() {
 		exitError <- srv.Run(ctx)
 	}()
@@ -37,17 +41,29 @@ func TestServer(t *testing.T) {
 	}
 
 	{
-		resp, err := http.Get("http://localhost:8080/foo")
+		resp, err := http.Post("http://localhost:8080/foo", "application/json", bytes.NewBufferString(`{"foo":"bar"}`))
 		if err != nil {
 			t.Errorf("http.Get returned an error : %s", err)
 		} else {
-			defer resp.Body.Close()
 			resData := testStruct{}
 			err := json.NewDecoder(resp.Body).Decode(&resData)
+			resp.Body.Close()
 			if err != nil {
 				t.Errorf("json.Decode returned an error : %s", err)
-			} else if !reflect.DeepEqual(resData, testData) {
+			} else if !reflect.DeepEqual(resData, testStruct{Foo: "bar"}) {
 				t.Errorf("http.Get returned invalid data : %+v", resData)
+			}
+		}
+	}
+
+	{
+		resp, err := http.Get("http://localhost:8080/decoding_error")
+		if err != nil {
+			t.Errorf("http.Get returned an error : %s", err)
+		} else {
+			resp.Body.Close()
+			if resp.StatusCode != http.StatusBadRequest {
+				t.Errorf("A decoding error should return a BadRequest status, not %d", resp.StatusCode)
 			}
 		}
 	}
@@ -64,11 +80,19 @@ func TestServer(t *testing.T) {
 }
 
 type testStruct struct {
-	Foo string
+	Foo string `json:"foo"`
 }
 
-var testData = testStruct{Foo: "bar"}
+func testEP(_ context.Context, req interface{}) (interface{}, error) {
+	return req, nil
+}
 
-func testEP(_ context.Context, _ interface{}) (interface{}, error) {
-	return testData, nil
+func goodDecoder(_ context.Context, r *http.Request) (interface{}, error) {
+	request := &testStruct{}
+	err := json.NewDecoder(r.Body).Decode(request)
+	return request, err
+}
+
+func badDecoder(_ context.Context, _ *http.Request) (interface{}, error) {
+	return nil, errors.New("decoding error")
 }

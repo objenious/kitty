@@ -45,6 +45,8 @@ func TestClient(t *testing.T) {
 	}
 }
 
+var testData = testStruct{Foo: "bar"}
+
 type testHandler struct {
 	statuses []int
 }

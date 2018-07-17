@@ -1,6 +1,9 @@
 package kitty
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
@@ -37,11 +40,28 @@ func (s *Server) HTTPEndpoint(method, path string, ep endpoint.Endpoint, opts ..
 	return s
 }
 
+type decoderError struct {
+	error
+}
+
+func (e decoderError) StatusCode() int {
+	if err, ok := e.error.(httptransport.StatusCoder); ok {
+		return err.StatusCode()
+	}
+	return http.StatusBadRequest
+}
+
 // Decoder defines the request decoder for an endpoint.
 // If none is provided, NopRequestDecoder is used.
 func Decoder(dec httptransport.DecodeRequestFunc) HTTPEndpointOption {
 	return func(e *httpendpoint) *httpendpoint {
-		e.decoder = dec
+		e.decoder = func(ctx context.Context, r *http.Request) (interface{}, error) {
+			request, err := dec(ctx, r)
+			if err != nil {
+				return nil, decoderError{error: err}
+			}
+			return request, nil
+		}
 		return e
 	}
 }
