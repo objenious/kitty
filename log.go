@@ -2,10 +2,9 @@ package kitty
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/go-kit/kit/log"
-	httptransport "github.com/go-kit/kit/transport/http"
+	kithttp "github.com/go-kit/kit/transport/http"
 )
 
 // nopLogger is the default logger and does nothing.
@@ -14,16 +13,16 @@ type nopLogger struct{}
 func (l *nopLogger) Log(keyvals ...interface{}) error { return nil }
 
 var logkeys = map[string]interface{}{
-	"http-method":            httptransport.ContextKeyRequestMethod,
-	"http-uri":               httptransport.ContextKeyRequestURI,
-	"http-path":              httptransport.ContextKeyRequestPath,
-	"http-proto":             httptransport.ContextKeyRequestProto,
-	"http-requesthost":       httptransport.ContextKeyRequestHost,
-	"http-remote-addr":       httptransport.ContextKeyRequestRemoteAddr,
-	"http-x-forwarded-for":   httptransport.ContextKeyRequestXForwardedFor,
-	"http-x-forwarded-proto": httptransport.ContextKeyRequestXForwardedProto,
-	"http-user-agent":        httptransport.ContextKeyRequestUserAgent,
-	"http-x-request-id":      httptransport.ContextKeyRequestXRequestID,
+	"http-method":            kithttp.ContextKeyRequestMethod,
+	"http-uri":               kithttp.ContextKeyRequestURI,
+	"http-path":              kithttp.ContextKeyRequestPath,
+	"http-proto":             kithttp.ContextKeyRequestProto,
+	"http-requesthost":       kithttp.ContextKeyRequestHost,
+	"http-remote-addr":       kithttp.ContextKeyRequestRemoteAddr,
+	"http-x-forwarded-for":   kithttp.ContextKeyRequestXForwardedFor,
+	"http-x-forwarded-proto": kithttp.ContextKeyRequestXForwardedProto,
+	"http-user-agent":        kithttp.ContextKeyRequestUserAgent,
+	"http-x-request-id":      kithttp.ContextKeyRequestXRequestID,
 }
 
 // Logger sets the logger.
@@ -40,7 +39,7 @@ func (s *Server) LogContext(keys ...string) *Server {
 	return s
 }
 
-func (s *Server) addLoggerToContext(ctx context.Context, _ *http.Request) context.Context {
+func (s *Server) addLoggerToContext(ctx context.Context) context.Context {
 	l := s.logger
 	for _, k := range s.logkeys {
 		if val, ok := ctx.Value(logkeys[k]).(string); ok && val != "" {
@@ -49,6 +48,8 @@ func (s *Server) addLoggerToContext(ctx context.Context, _ *http.Request) contex
 	}
 	return context.WithValue(ctx, logKey, l)
 }
+
+type addLoggerToContextFn func(ctx context.Context) context.Context
 
 // Logger will return the logger that has been injected into the context by the kitty
 // server. This function can only be called from an endpoint.

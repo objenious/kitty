@@ -9,7 +9,7 @@ import (
 )
 
 // NewBackoff creates an exponential backoff middleware, based on github.com/cenkalti/backoff.
-// Retries will be attemped if the returned error implements is retryable (see kitty.IsRetryable).
+// Retries will be attempted if the returned error implements is retryable (see kitty.IsRetryable).
 func NewBackoff(bo backoff.BackOff) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, finalerr error) {

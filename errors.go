@@ -32,14 +32,14 @@ type retryableError struct {
 	error
 }
 
-func (_ retryableError) Retryable() bool {
+func (retryableError) Retryable() bool {
 	return true
 }
 
 var _ error = retryableError{}
 var _ Retryabler = retryableError{}
 
-// Retryable defines an error as retryable.
+// Retryable defines any error as retryable.
 func Retryable(err error) error {
 	return retryableError{error: err}
 }

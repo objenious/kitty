@@ -11,7 +11,7 @@ Kitty is a slightly opinionated framework based on go-kit.
 It's goal is to ease development of microservices deployed on Kubernetes (or any similar orchestration platform).
 
 Kitty has an opinion on:
-* transports: only HTTP is supported (additional transports might be added),
+* transports: HTTP only (additional transports can be added as long as they implement kitty.Transport),
 * errors: an error may be Retryable (e.g. 5XX status codes) or not (e.g. 4XX status codes),
 * status codes: unless specified, request decoding errors will generate 400 HTTP status codes.
 
@@ -30,11 +30,12 @@ Kitty includes 2 sub-packages:
 
 Server-side
 ```
-kitty.NewServer().Config(kitty.Config{HTTPPort: 8081}).
+t := kitty.NewHTTPTransport(kitty.Config{HTTPPort: 8081}).
   Router(gorilla.Router()).
-  HTTPEndpoint("POST", "/foo", Foo, kitty.Decoder(decodeFooRequest)).
-  HTTPEndpoint("GET", "/bar", Bar).
-  Run(ctx)
+  Endpoint("POST", "/foo", Foo, kitty.Decoder(decodeFooRequest)).
+  Endpoint("GET", "/bar", Bar)
+
+kitty.NewServer(t).Run(ctx)
 
 // Foo is a go-kit Endpoint
 func Foo(ctx context.Context, request interface{}) (interface{}, error) {
@@ -57,7 +58,7 @@ Client-side (with circuit breaker & exponential backoff)
 e := kitty.NewClient(
   "POST",
   "/foo",
-  httptransport.EncodeJSONRequest,
+  kithttp.EncodeJSONRequest,
   decodeFooResponse,
 ).Endpoint()
 cb := gobreaker.NewCircuitBreaker(gobreaker.Settings{Name: "foo"})
@@ -72,12 +73,12 @@ e = kittybackoff.NewBackoff(bo)(e)
 ### Log requests
 
 ```
-kitty.NewServer().
+kitty.NewServer(t).
 // Log as JSON
 Logger(log.NewJSONLogger(log.NewSyncWriter(os.Stdout))).
 // Add path and method to all log lines
 LogContext("http-path", "http-method").
-// Log request only if an error occured
+// Log request only if an error occurred
 Middlewares(kitty.LogEndpoint(kitty.LogErrors))
 ```
 
