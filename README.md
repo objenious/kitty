@@ -94,7 +94,7 @@ health := healthcheck.NewHandler()
 health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(100))
 health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(db, 1*time.Second))
 
-kitty.NewServer().Liveness(health.LiveEndpoint).Readiness(health.ReadyEndpoint)
+t := kitty.NewTransport(kitty.Config{}).Liveness(health.LiveEndpoint).Readiness(health.ReadyEndpoint)
 ```
 
 ## Requirements
