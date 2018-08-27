@@ -55,17 +55,17 @@ func decodeFooRequest(ctx context.Context, r *http.Request) (interface{}, error)
 
 Client-side (with circuit breaker & exponential backoff)
 ```
+u, err := url.Parse("http://example.com/foo")
 e := kitty.NewClient(
   "POST",
-  "/foo",
+  u,
   kithttp.EncodeJSONRequest,
-  decodeFooResponse,
+  decodeFooResponse
 ).Endpoint()
 cb := gobreaker.NewCircuitBreaker(gobreaker.Settings{Name: "foo"})
 e = kittycircuitbreaker.NewCircuitBreaker(cb)(e)
 bo := backoff.NewExponentialBackOff()
 e = kittybackoff.NewBackoff(bo)(e)
-
 ```
 
 ## How-to
@@ -74,12 +74,12 @@ e = kittybackoff.NewBackoff(bo)(e)
 
 ```
 kitty.NewServer(t).
-// Log as JSON
-Logger(log.NewJSONLogger(log.NewSyncWriter(os.Stdout))).
-// Add path and method to all log lines
-LogContext("http-path", "http-method").
-// Log request only if an error occurred
-Middlewares(kitty.LogEndpoint(kitty.LogErrors))
+  // Log as JSON
+  Logger(log.NewJSONLogger(log.NewSyncWriter(os.Stdout))).
+  // Add path and method to all log lines
+  LogContext("http-path", "http-method").
+  // Log request only if an error occurred
+  Middlewares(kitty.LogEndpoint(kitty.LogErrors))
 ```
 
 ### Integrate with Istio
