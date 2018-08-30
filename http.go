@@ -71,14 +71,10 @@ func (t *HTTPTransport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t.httpmiddleware(t.mux).ServeHTTP(w, r)
 }
 
-// RegisterEndpoints registers all configured endpoints, wraps them with the m middleware and
-// configures the logger.
-func (t *HTTPTransport) RegisterEndpoints(m endpoint.Middleware, fn AddLoggerToContextFn) error {
+// RegisterEndpoints registers all configured endpoints, wraps them with the m middleware.
+func (t *HTTPTransport) RegisterEndpoints(m endpoint.Middleware) error {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerBefore(kithttp.PopulateRequestContext),
-		kithttp.ServerBefore(func(ctx context.Context, _ *http.Request) context.Context {
-			return fn(ctx)
-		}),
 	}
 	opts = append(opts, t.opts...)
 

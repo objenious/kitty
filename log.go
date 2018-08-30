@@ -3,6 +3,7 @@ package kitty
 import (
 	"context"
 
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	kithttp "github.com/go-kit/kit/transport/http"
 )
@@ -49,7 +50,14 @@ func (s *Server) addLoggerToContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, logKey, l)
 }
 
-type AddLoggerToContextFn func(ctx context.Context) context.Context
+func (s *Server) addLoggerToContextMiddleware(m endpoint.Middleware) endpoint.Middleware {
+	return func(e endpoint.Endpoint) endpoint.Endpoint {
+		e = m(e)
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			return e(s.addLoggerToContext(ctx), request)
+		}
+	}
+}
 
 // Logger will return the logger that has been injected into the context by the kitty
 // server. This function can only be called from an endpoint.
