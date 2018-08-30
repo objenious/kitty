@@ -103,11 +103,11 @@ func (t *HTTPTransport) Start(ctx context.Context) error {
 		Handler: t,
 		Addr:    fmt.Sprintf(":%d", t.cfg.HTTPPort),
 	}
+	_ = LogMessage(ctx, fmt.Sprintf("Listening on port: %d", t.cfg.HTTPPort))
 	err := t.svr.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err
 	}
-	_ = LogMessage(ctx, fmt.Sprintf("Listening on port: %d", t.cfg.HTTPPort))
 	return nil
 }
 
