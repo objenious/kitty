@@ -39,7 +39,7 @@ func (retryableError) Retryable() bool {
 var _ error = retryableError{}
 var _ Retryabler = retryableError{}
 
-// Retryable defines any error as retryable.
+// Retryable defines an error as retryable.
 func Retryable(err error) error {
 	return retryableError{error: err}
 }
