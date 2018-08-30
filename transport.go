@@ -9,7 +9,7 @@ import (
 // Transport is the interface all transports must implement.
 type Transport interface {
 	// RegisterEndpoints registers all endpoints.
-	RegisterEndpoints(m endpoint.Middleware, fn addLoggerToContextFn) error
+	RegisterEndpoints(m endpoint.Middleware, fn AddLoggerToContextFn) error
 	// Start starts the transport.
 	Start(ctx context.Context) error
 	// Shutdown shutdowns the transport.

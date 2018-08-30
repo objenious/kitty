@@ -73,7 +73,7 @@ func (t *HTTPTransport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // RegisterEndpoints registers all configured endpoints, wraps them with the m middleware and
 // configures the logger.
-func (t *HTTPTransport) RegisterEndpoints(m endpoint.Middleware, fn addLoggerToContextFn) error {
+func (t *HTTPTransport) RegisterEndpoints(m endpoint.Middleware, fn AddLoggerToContextFn) error {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerBefore(kithttp.PopulateRequestContext),
 		kithttp.ServerBefore(func(ctx context.Context, _ *http.Request) context.Context {

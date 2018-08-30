@@ -49,7 +49,7 @@ func (s *Server) addLoggerToContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, logKey, l)
 }
 
-type addLoggerToContextFn func(ctx context.Context) context.Context
+type AddLoggerToContextFn func(ctx context.Context) context.Context
 
 // Logger will return the logger that has been injected into the context by the kitty
 // server. This function can only be called from an endpoint.
