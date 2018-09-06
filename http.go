@@ -97,6 +97,24 @@ func (t *HTTPTransport) RegisterEndpoints(m endpoint.Middleware) error {
 	return nil
 }
 
+var httpLogkeys = map[string]interface{}{
+	"http-method":            kithttp.ContextKeyRequestMethod,
+	"http-uri":               kithttp.ContextKeyRequestURI,
+	"http-path":              kithttp.ContextKeyRequestPath,
+	"http-proto":             kithttp.ContextKeyRequestProto,
+	"http-requesthost":       kithttp.ContextKeyRequestHost,
+	"http-remote-addr":       kithttp.ContextKeyRequestRemoteAddr,
+	"http-x-forwarded-for":   kithttp.ContextKeyRequestXForwardedFor,
+	"http-x-forwarded-proto": kithttp.ContextKeyRequestXForwardedProto,
+	"http-user-agent":        kithttp.ContextKeyRequestUserAgent,
+	"http-x-request-id":      kithttp.ContextKeyRequestXRequestID,
+}
+
+// LogKeys returns the list of name key to context key mappings
+func (t *HTTPTransport) LogKeys() map[string]interface{} {
+	return httpLogkeys
+}
+
 // Start starts the HTTP server.
 func (t *HTTPTransport) Start(ctx context.Context) error {
 	t.svr = &http.Server{

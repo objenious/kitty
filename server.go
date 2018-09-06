@@ -44,9 +44,9 @@ func NewServer(t ...Transport) *Server {
 
 // Run starts the server.
 func (s *Server) Run(ctx context.Context) error {
-	ctx = s.addLoggerToContext(ctx)
-	m := s.addLoggerToContextMiddleware(s.middleware)
+	ctx = s.addLoggerToContext(ctx, nil)
 	for _, t := range s.transports {
+		m := s.addLoggerToContextMiddleware(s.middleware, t)
 		if err := t.RegisterEndpoints(m); err != nil {
 			return err
 		}
