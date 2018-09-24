@@ -10,7 +10,8 @@ import (
 type Transport interface {
 	// RegisterEndpoints registers all endpoints. Endpoints needs to be wrapped with the specified middleware.
 	RegisterEndpoints(m endpoint.Middleware) error
-	// LogKeys returns the list of name key to context key mappings for logging
+	// LogKeys returns the list of name key (as configured in Server.LogContext) to context key (as set in context.WithValue) mappings
+	// for logging. Transports are responsible for injecting the corresponding values in the context.
 	LogKeys() map[string]interface{}
 	// Start starts the transport.
 	Start(ctx context.Context) error

@@ -5,7 +5,9 @@
 
 `go get github.com/objenious/kitty`
 
-## Status: alpha - breaking changes might happen
+## Status: beta - breaking changes might happen
+
+*Warning: Breaking changes in 0.0.4, with the addition of transports*
 
 Kitty is a slightly opinionated framework based on go-kit.
 It's goal is to ease development of microservices deployed on Kubernetes (or any similar orchestration platform).
