@@ -1,6 +1,6 @@
 package kitty
 
-// Config holds configuration info for a kitty.Server.
+// Config holds configuration info for kitty.HTTPTransport.
 type Config struct {
 	// LivenessCheckPath is the path of the health handler (default: "/alivez").
 	LivenessCheckPath string
@@ -12,22 +12,7 @@ type Config struct {
 	EnablePProf bool
 }
 
-// Config defines the configuration to be used by a kitty server.
-func (s *Server) Config(cfg Config) *Server {
-	if cfg.HTTPPort > 0 {
-		s.cfg.HTTPPort = cfg.HTTPPort
-	}
-	if cfg.LivenessCheckPath != "" {
-		s.cfg.LivenessCheckPath = cfg.LivenessCheckPath
-	}
-	if cfg.ReadinessCheckPath != "" {
-		s.cfg.ReadinessCheckPath = cfg.ReadinessCheckPath
-	}
-	s.cfg.EnablePProf = cfg.EnablePProf
-	return s
-}
-
-// DefaultConfig defines the default config of a kitty.Server.
+// DefaultConfig defines the default config of kitty.HTTPTransport.
 var DefaultConfig = Config{
 	HTTPPort:           8080,
 	LivenessCheckPath:  "/alivez",

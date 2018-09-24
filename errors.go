@@ -32,7 +32,7 @@ type retryableError struct {
 	error
 }
 
-func (_ retryableError) Retryable() bool {
+func (retryableError) Retryable() bool {
 	return true
 }
 

@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"testing"
 
-	httptransport "github.com/go-kit/kit/transport/http"
+	kithttp "github.com/go-kit/kit/transport/http"
 )
 
 func TestClient(t *testing.T) {
@@ -19,7 +19,7 @@ func TestClient(t *testing.T) {
 
 	client := ts.Client()
 	u, _ := url.Parse(ts.URL)
-	e := NewClient("GET", u, httptransport.EncodeJSONRequest, decodeTestResponse, httptransport.SetClient(client)).Endpoint()
+	e := NewClient("GET", u, kithttp.EncodeJSONRequest, decodeTestResponse, kithttp.SetClient(client)).Endpoint()
 	h.statuses = []int{http.StatusServiceUnavailable}
 	_, err := e(context.TODO(), nil)
 	if err == nil {

@@ -18,12 +18,12 @@ type Router interface {
 type RouterOption func(Router) Router
 
 // Router defines the router to use in a server.
-func (s *Server) Router(r Router, opts ...RouterOption) *Server {
+func (t *HTTPTransport) Router(r Router, opts ...RouterOption) *HTTPTransport {
 	for _, opt := range opts {
 		r = opt(r)
 	}
-	s.mux = r
-	return s
+	t.mux = r
+	return t
 }
 
 // StdlibRouter returns a Router based on the stdlib http package.

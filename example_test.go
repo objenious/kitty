@@ -26,9 +26,8 @@ func ExampleServer() {
 		}
 		return request, nil
 	}
-
-	kitty.NewServer().Config(kitty.Config{HTTPPort: 8081}).
+	t := kitty.NewHTTPTransport(kitty.Config{HTTPPort: 8081}).
 		Router(gorilla.Router()).
-		HTTPEndpoint("POST", "/foo", foo, kitty.Decoder(decodeFooRequest)).
-		Run(context.Background())
+		Endpoint("POST", "/foo", foo, kitty.Decoder(decodeFooRequest))
+	kitty.NewServer(t).Run(context.Background())
 }

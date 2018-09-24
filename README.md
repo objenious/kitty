@@ -5,13 +5,15 @@
 
 `go get github.com/objenious/kitty`
 
-## Status: alpha - breaking changes might happen
+## Status: beta - breaking changes might happen
+
+*Warning: Breaking changes in 0.0.4, with the addition of transports*
 
 Kitty is a slightly opinionated framework based on go-kit.
 It's goal is to ease development of microservices deployed on Kubernetes (or any similar orchestration platform).
 
 Kitty has an opinion on:
-* transports: only HTTP is supported (additional transports might be added),
+* transports: HTTP only (additional transports can be added as long as they implement kitty.Transport),
 * errors: an error may be Retryable (e.g. 5XX status codes) or not (e.g. 4XX status codes),
 * status codes: unless specified, request decoding errors will generate 400 HTTP status codes.
 
@@ -30,11 +32,12 @@ Kitty includes 2 sub-packages:
 
 Server-side
 ```
-kitty.NewServer().Config(kitty.Config{HTTPPort: 8081}).
+t := kitty.NewHTTPTransport(kitty.Config{HTTPPort: 8081}).
   Router(gorilla.Router()).
-  HTTPEndpoint("POST", "/foo", Foo, kitty.Decoder(decodeFooRequest)).
-  HTTPEndpoint("GET", "/bar", Bar).
-  Run(ctx)
+  Endpoint("POST", "/foo", Foo, kitty.Decoder(decodeFooRequest)).
+  Endpoint("GET", "/bar", Bar)
+
+kitty.NewServer(t).Run(ctx)
 
 // Foo is a go-kit Endpoint
 func Foo(ctx context.Context, request interface{}) (interface{}, error) {
@@ -54,17 +57,17 @@ func decodeFooRequest(ctx context.Context, r *http.Request) (interface{}, error)
 
 Client-side (with circuit breaker & exponential backoff)
 ```
+u, err := url.Parse("http://example.com/foo")
 e := kitty.NewClient(
   "POST",
-  "/foo",
-  httptransport.EncodeJSONRequest,
-  decodeFooResponse,
+  u,
+  kithttp.EncodeJSONRequest,
+  decodeFooResponse
 ).Endpoint()
 cb := gobreaker.NewCircuitBreaker(gobreaker.Settings{Name: "foo"})
 e = kittycircuitbreaker.NewCircuitBreaker(cb)(e)
 bo := backoff.NewExponentialBackOff()
 e = kittybackoff.NewBackoff(bo)(e)
-
 ```
 
 ## How-to
@@ -72,13 +75,13 @@ e = kittybackoff.NewBackoff(bo)(e)
 ### Log requests
 
 ```
-kitty.NewServer().
-// Log as JSON
-Logger(log.NewJSONLogger(log.NewSyncWriter(os.Stdout))).
-// Add path and method to all log lines
-LogContext("http-path", "http-method").
-// Log request only if an error occured
-Middlewares(kitty.LogEndpoint(kitty.LogErrors))
+kitty.NewServer(t).
+  // Log as JSON
+  Logger(log.NewJSONLogger(log.NewSyncWriter(os.Stdout))).
+  // Add path and method to all log lines
+  LogContext("http-path", "http-method").
+  // Log request only if an error occurred
+  Middlewares(kitty.LogEndpoint(kitty.LogErrors))
 ```
 
 ### Integrate with Istio
@@ -93,7 +96,7 @@ health := healthcheck.NewHandler()
 health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(100))
 health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(db, 1*time.Second))
 
-kitty.NewServer().Liveness(health.LiveEndpoint).Readiness(health.ReadyEndpoint)
+t := kitty.NewTransport(kitty.Config{}).Liveness(health.LiveEndpoint).Readiness(health.ReadyEndpoint)
 ```
 
 ## Requirements

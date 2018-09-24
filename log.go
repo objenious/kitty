@@ -2,29 +2,15 @@ package kitty
 
 import (
 	"context"
-	"net/http"
 
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
-	httptransport "github.com/go-kit/kit/transport/http"
 )
 
 // nopLogger is the default logger and does nothing.
 type nopLogger struct{}
 
 func (l *nopLogger) Log(keyvals ...interface{}) error { return nil }
-
-var logkeys = map[string]interface{}{
-	"http-method":            httptransport.ContextKeyRequestMethod,
-	"http-uri":               httptransport.ContextKeyRequestURI,
-	"http-path":              httptransport.ContextKeyRequestPath,
-	"http-proto":             httptransport.ContextKeyRequestProto,
-	"http-requesthost":       httptransport.ContextKeyRequestHost,
-	"http-remote-addr":       httptransport.ContextKeyRequestRemoteAddr,
-	"http-x-forwarded-for":   httptransport.ContextKeyRequestXForwardedFor,
-	"http-x-forwarded-proto": httptransport.ContextKeyRequestXForwardedProto,
-	"http-user-agent":        httptransport.ContextKeyRequestUserAgent,
-	"http-x-request-id":      httptransport.ContextKeyRequestXRequestID,
-}
 
 // Logger sets the logger.
 func (s *Server) Logger(l log.Logger) *Server {
@@ -33,21 +19,33 @@ func (s *Server) Logger(l log.Logger) *Server {
 }
 
 // LogContext defines the list of keys to add to all log lines.
-// Available keys are : http-method, http-uri, http-path, http-proto, http-requesthost, http-remote-addr,
-// http-x-forwarded-for, http-x-forwarded-proto, http-user-agent and http-x-request-id.
+// Keys may vary depending on transport.
+// Available keys for the http transport are : http-method, http-uri, http-path, http-proto, http-requesthost,
+// http-remote-addr, http-x-forwarded-for, http-x-forwarded-proto, http-user-agent and http-x-request-id.
 func (s *Server) LogContext(keys ...string) *Server {
 	s.logkeys = keys
 	return s
 }
 
-func (s *Server) addLoggerToContext(ctx context.Context, _ *http.Request) context.Context {
+func (s *Server) addLoggerToContext(ctx context.Context, keys map[string]interface{}) context.Context {
 	l := s.logger
-	for _, k := range s.logkeys {
-		if val, ok := ctx.Value(logkeys[k]).(string); ok && val != "" {
-			l = log.With(l, k, val)
+	if keys != nil {
+		for _, k := range s.logkeys {
+			if val, ok := ctx.Value(keys[k]).(string); ok && val != "" {
+				l = log.With(l, k, val)
+			}
 		}
 	}
 	return context.WithValue(ctx, logKey, l)
+}
+
+func (s *Server) addLoggerToContextMiddleware(m endpoint.Middleware, t Transport) endpoint.Middleware {
+	return func(e endpoint.Endpoint) endpoint.Endpoint {
+		e = m(e)
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			return e(s.addLoggerToContext(ctx, t.LogKeys()), request)
+		}
+	}
 }
 
 // Logger will return the logger that has been injected into the context by the kitty

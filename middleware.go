@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	httptransport "github.com/go-kit/kit/transport/http"
+	kithttp "github.com/go-kit/kit/transport/http"
 )
 
 // nopMiddleware is the default middleware, and does nothing.
@@ -26,28 +26,15 @@ func (s *Server) Middlewares(m ...endpoint.Middleware) *Server {
 	return s
 }
 
-// nopHTTPMiddleWare is the default HTTP middleware, and does nothing.
-func nopHTTPMiddleWare(h http.Handler) http.Handler {
-	return h
-}
-
-// HTTPMiddlewares defines the list of HTTP middlewares to be added to all HTTP handlers.
-func (s *Server) HTTPMiddlewares(m ...func(http.Handler) http.Handler) *Server {
-	s.httpmiddleware = func(next http.Handler) http.Handler {
-		for i := len(m) - 1; i >= 0; i-- {
-			next = m[i](next)
-		}
-		return next
-	}
-	return s
-}
-
-// LogOption is a LogEndpoint middleware option
+// LogOption is a LogEndpoint middleware option.
 type LogOption int
 
 const (
+	// LogRequest logs the request.
 	LogRequest LogOption = iota
+	// LogResponse logs the response.
 	LogResponse
+	// LogErrors logs the request in case of an error.
 	LogErrors
 )
 
@@ -64,22 +51,22 @@ func LogEndpoint(fields ...LogOption) endpoint.Middleware {
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			if opts[LogRequest] {
-				LogMessage(ctx, fmt.Sprintf("request: %+v", request))
+				_ = LogMessage(ctx, fmt.Sprintf("request: %+v", request))
 			}
 			start := time.Now()
 			response, err = e(ctx, request)
 			code := http.StatusOK
 			if err != nil {
 				code = http.StatusInternalServerError
-				if sc, ok := err.(httptransport.StatusCoder); ok {
+				if sc, ok := err.(kithttp.StatusCoder); ok {
 					code = sc.StatusCode()
 				}
 			}
 			switch {
 			case opts[LogResponse]:
-				LogMessage(ctx, fmt.Sprintf("response: %+v", response), "status", code, "duration", time.Since(start))
+				_ = LogMessage(ctx, fmt.Sprintf("response: %+v", response), "status", code, "duration", time.Since(start))
 			case opts[LogErrors] && err != nil:
-				LogMessage(ctx, fmt.Sprintf("request: %+v", request), "error", err, "status", code, "duration", time.Since(start))
+				_ = LogMessage(ctx, fmt.Sprintf("request: %+v", request), "error", err, "status", code, "duration", time.Since(start))
 			default:
 				return
 			}

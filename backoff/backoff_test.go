@@ -10,13 +10,13 @@ import (
 
 type retryableError struct{}
 
-func (_ *retryableError) Error() string   { return "error" }
-func (_ *retryableError) Retryable() bool { return true }
+func (*retryableError) Error() string   { return "error" }
+func (*retryableError) Retryable() bool { return true }
 
 type nonRetryableError struct{}
 
-func (_ *nonRetryableError) Error() string   { return "error" }
-func (_ *nonRetryableError) Retryable() bool { return false }
+func (*nonRetryableError) Error() string   { return "error" }
+func (*nonRetryableError) Retryable() bool { return false }
 
 func TestBackoff(t *testing.T) {
 	bo := backoff.NewExponentialBackOff()
