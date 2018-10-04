@@ -156,8 +156,8 @@ func (t *HTTPTransport) AddOption(opt kithttp.ServerOption) *HTTPTransport {
 	return t
 }
 
-// SetErrorEncoder sets the error encoder used in HTTP Transport
+// ErrorEncoder adds the error encoder as an option used in HTTP Transport
 // call this function before RegisterEndpoints
-func (t *HTTPTransport) SetErrorEncoder(ee kithttp.ErrorEncoder) *HTTPTransport {
+func (t *HTTPTransport) ErrorEncoder(ee kithttp.ErrorEncoder) *HTTPTransport {
 	return t.AddOption(kithttp.ServerErrorEncoder(ee))
 }
