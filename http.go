@@ -148,3 +148,16 @@ func registerPProf(cfg Config, mux Router) {
 	mux.Handle("GET", "/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
 	mux.Handle("GET", "/debug/pprof/block", pprof.Handler("block"))
 }
+
+// AddOption adds a HTTP option
+// call this function before RegisterEndpoints
+func (t *HTTPTransport) AddOption(opt kithttp.ServerOption) *HTTPTransport {
+	t.opts = append(t.opts, opt)
+	return t
+}
+
+// SetErrorEncoder sets the error encoder used in HTTP Transport
+// call this function before RegisterEndpoints
+func (t *HTTPTransport) SetErrorEncoder(ee kithttp.ErrorEncoder) *HTTPTransport {
+	return t.AddOption(kithttp.ServerErrorEncoder(ee))
+}

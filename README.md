@@ -99,6 +99,24 @@ health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(db, 1*time.Se
 t := kitty.NewTransport(kitty.Config{}).Liveness(health.LiveEndpoint).Readiness(health.ReadyEndpoint)
 ```
 
+### Use error encoder
+
+You can set a global error encoder at the transport level
+
+```
+errorEncoder := func(ctx context.Context, err error, w http.ResponseWriter) {
+  // ...
+}
+
+t.SetErrorEncoder(errorEncoder)
+```
+
+You can override it per endpoint as an option.
+
+```
+Endpoint("POST", "/foo", Foo, kitty.Decoder(decodeFooRequest), ServerOptions(kithttp.kithttp.ServerErrorEncoder(errorEncoder)))
+```
+
 ## Requirements
 
 Go > 1.8
