@@ -12,10 +12,6 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
-type Response struct {
-	status string
-}
-
 func TestEndpointResponseEncode(t *testing.T) {
 	cfg := Config{}
 	HTTPTransport := NewHTTPTransport(cfg)
@@ -42,7 +38,7 @@ func TestEndpointResponseEncode(t *testing.T) {
 		if rec.Code != 200 {
 			t.Errorf("default HTTP response status expected: %d", rec.Code)
 		}
-		body := string(rec.Body.Bytes())
+		body := rec.Body.String()
 		if strings.TrimSpace(body) != `"default response"` {
 			t.Errorf("different body expected: %s", body)
 		}
@@ -59,7 +55,7 @@ func TestEndpointResponseEncode(t *testing.T) {
 		if rec.Code != 501 {
 			t.Errorf("override HTTP response status expected: %d", rec.Code)
 		}
-		body := string(rec.Body.Bytes())
+		body := rec.Body.String()
 		if body != "" {
 			t.Errorf("different body expected: %s", body)
 		}
@@ -95,7 +91,7 @@ func TestDefaultResponseEncode(t *testing.T) {
 	if rec.Code != 501 {
 		t.Errorf("default HTTP response status expected: %d", rec.Code)
 	}
-	body := string(rec.Body.Bytes())
+	body := rec.Body.String()
 	if strings.TrimSpace(body) != `response:"default response"` {
 		t.Errorf("different body expected: %s", body)
 	}
