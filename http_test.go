@@ -2,6 +2,7 @@ package kitty
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -9,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/go-kit/kit/endpoint"
-
-	kithttp "github.com/go-kit/kit/transport/http"
 )
 
 type Response struct {
@@ -77,7 +76,11 @@ func TestDefaultResponseEncode(t *testing.T) {
 	HTTPTransport := NewHTTPTransport(cfg).
 		Endpoint("GET", "/test/override", func(ctx context.Context, r interface{}) (interface{}, error) {
 			return "override response", nil
-		}, Encoder(kithttp.EncodeJSONResponse)).
+		}, Encoder(func(ctx context.Context, w http.ResponseWriter, r interface{}) error {
+			w.WriteHeader(202)
+			w.Write([]byte("response:"))
+			return json.NewEncoder(w).Encode(r)
+		})).
 		Endpoint("GET", "/test/default", func(ctx context.Context, r interface{}) (interface{}, error) {
 			return "default response", nil
 		})
@@ -113,11 +116,11 @@ func TestDefaultResponseEncode(t *testing.T) {
 				Path: "/test/override",
 			},
 		})
-		if rec.Code != 200 {
+		if rec.Code != 202 {
 			t.Errorf("override HTTP response status expected: %d", rec.Code)
 		}
 		body := string(rec.Body.Bytes())
-		if strings.TrimSpace(body) != `"override response"` {
+		if strings.TrimSpace(body) != `response:"override response"` {
 			t.Errorf("different body expected: %s", body)
 		}
 	}
