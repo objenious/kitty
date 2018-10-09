@@ -18,8 +18,6 @@ type HTTPTransport struct {
 
 	endpoints []*httpendpoint
 
-	defaultEncodeResponse kithttp.EncodeResponseFunc
-
 	httpmiddleware func(http.Handler) http.Handler
 	mux            Router
 	svr            *http.Server
