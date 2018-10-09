@@ -63,6 +63,9 @@ func NewHTTPTransport(cfg Config) *HTTPTransport {
 		t.cfg.ReadinessCheckPath = cfg.ReadinessCheckPath
 	}
 	t.cfg.EnablePProf = cfg.EnablePProf
+	if cfg.EncodeResponse != nil {
+		t.cfg.EncodeResponse = cfg.EncodeResponse
+	}
 	return t
 }
 
@@ -80,11 +83,15 @@ func (t *HTTPTransport) RegisterEndpoints(m endpoint.Middleware) error {
 
 	// register endpoints
 	for _, ep := range t.endpoints {
+		encoder := t.cfg.EncodeResponse
+		if ep.encoder != nil {
+			encoder = ep.encoder
+		}
 		t.mux.Handle(ep.method, ep.path,
 			kithttp.NewServer(
 				m(ep.endpoint),
 				ep.decoder,
-				ep.encoder,
+				encoder,
 				append(opts, ep.options...)...))
 	}
 
