@@ -12,7 +12,7 @@ type Config struct {
 	HTTPPort int
 	// EnablePProf enables pprof urls (default: false).
 	EnablePProf bool
-	// EncodeResponse overrides go-kit reponse encoder without to have to pass the encoder to each endpoint, but is still overrided by the endpoint's encoder
+	// EncodeResponse defines the default response encoder for all endpoints (by default: EncodeJSONResponse). It can be overriden for a specific endpoint.
 	EncodeResponse kithttp.EncodeResponseFunc
 }
 

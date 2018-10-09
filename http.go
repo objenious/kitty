@@ -63,7 +63,9 @@ func NewHTTPTransport(cfg Config) *HTTPTransport {
 		t.cfg.ReadinessCheckPath = cfg.ReadinessCheckPath
 	}
 	t.cfg.EnablePProf = cfg.EnablePProf
-	t.cfg.EncodeResponse = cfg.EncodeResponse
+	if cfg.EncodeResponse != nil {
+		t.cfg.EncodeResponse = cfg.EncodeResponse
+	}
 	return t
 }
 
