@@ -70,18 +70,12 @@ func TestDefaultResponseEncode(t *testing.T) {
 	cfg := Config{
 		EncodeResponse: func(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 			w.WriteHeader(501)
-			return nil
+			w.Write([]byte("response:"))
+			return json.NewEncoder(w).Encode(r)
 		},
 	}
 	HTTPTransport := NewHTTPTransport(cfg).
-		Endpoint("GET", "/test/override", func(ctx context.Context, r interface{}) (interface{}, error) {
-			return "override response", nil
-		}, Encoder(func(ctx context.Context, w http.ResponseWriter, r interface{}) error {
-			w.WriteHeader(202)
-			w.Write([]byte("response:"))
-			return json.NewEncoder(w).Encode(r)
-		})).
-		Endpoint("GET", "/test/default", func(ctx context.Context, r interface{}) (interface{}, error) {
+		Endpoint("GET", "/test", func(ctx context.Context, r interface{}) (interface{}, error) {
 			return "default response", nil
 		})
 	err := HTTPTransport.RegisterEndpoints(func(e endpoint.Endpoint) endpoint.Endpoint {
@@ -90,38 +84,19 @@ func TestDefaultResponseEncode(t *testing.T) {
 	if err != nil {
 		t.Errorf("error occurred: %+v", err)
 	}
-	{
-		rec := httptest.NewRecorder()
-		HTTPTransport.ServeHTTP(rec, &http.Request{
-			Method:     "GET",
-			RequestURI: "/test/default",
-			URL: &url.URL{
-				Path: "/test/default",
-			},
-		})
-		if rec.Code != 501 {
-			t.Errorf("default HTTP response status expected: %d", rec.Code)
-		}
-		body := string(rec.Body.Bytes())
-		if body != "" {
-			t.Errorf("different body expected: %s", body)
-		}
+	rec := httptest.NewRecorder()
+	HTTPTransport.ServeHTTP(rec, &http.Request{
+		Method:     "GET",
+		RequestURI: "/test",
+		URL: &url.URL{
+			Path: "/test",
+		},
+	})
+	if rec.Code != 501 {
+		t.Errorf("default HTTP response status expected: %d", rec.Code)
 	}
-	{
-		rec := httptest.NewRecorder()
-		HTTPTransport.ServeHTTP(rec, &http.Request{
-			Method:     "GET",
-			RequestURI: "/test/override",
-			URL: &url.URL{
-				Path: "/test/override",
-			},
-		})
-		if rec.Code != 202 {
-			t.Errorf("override HTTP response status expected: %d", rec.Code)
-		}
-		body := string(rec.Body.Bytes())
-		if strings.TrimSpace(body) != `response:"override response"` {
-			t.Errorf("different body expected: %s", body)
-		}
+	body := string(rec.Body.Bytes())
+	if strings.TrimSpace(body) != `response:"default response"` {
+		t.Errorf("different body expected: %s", body)
 	}
 }
