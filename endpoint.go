@@ -30,7 +30,6 @@ func (t *HTTPTransport) Endpoint(method, path string, ep endpoint.Endpoint, opts
 		path:     path,
 		endpoint: ep,
 		decoder:  kithttp.NopRequestDecoder,
-		encoder:  kithttp.EncodeJSONResponse,
 	}
 	for _, opt := range opts {
 		e = opt(e)

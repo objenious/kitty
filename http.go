@@ -18,6 +18,8 @@ type HTTPTransport struct {
 
 	endpoints []*httpendpoint
 
+	defaultEncodeResponse kithttp.EncodeResponseFunc
+
 	httpmiddleware func(http.Handler) http.Handler
 	mux            Router
 	svr            *http.Server
@@ -63,6 +65,7 @@ func NewHTTPTransport(cfg Config) *HTTPTransport {
 		t.cfg.ReadinessCheckPath = cfg.ReadinessCheckPath
 	}
 	t.cfg.EnablePProf = cfg.EnablePProf
+	t.cfg.EncodeResponse = cfg.EncodeResponse
 	return t
 }
 
@@ -80,11 +83,15 @@ func (t *HTTPTransport) RegisterEndpoints(m endpoint.Middleware) error {
 
 	// register endpoints
 	for _, ep := range t.endpoints {
+		encoder := t.cfg.EncodeResponse
+		if ep.encoder != nil {
+			encoder = ep.encoder
+		}
 		t.mux.Handle(ep.method, ep.path,
 			kithttp.NewServer(
 				m(ep.endpoint),
 				ep.decoder,
-				ep.encoder,
+				encoder,
 				append(opts, ep.options...)...))
 	}
 
