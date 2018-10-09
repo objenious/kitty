@@ -26,10 +26,10 @@ func TestEndpointResponseEncode(t *testing.T) {
 	overrideCalled := false
 	HTTPTransport.Endpoint("GET", "/test/default", func(ctx context.Context, r interface{}) (interface{}, error) {
 		defaultCalled = true
-		return "OK", nil
+		return "default response", nil
 	}).Endpoint("GET", "/test/override", func(ctx context.Context, r interface{}) (interface{}, error) {
 		overrideCalled = true
-		return "OK", nil
+		return "override response", nil
 	}, Encoder(func(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 		w.WriteHeader(501)
 		return nil
@@ -48,19 +48,18 @@ func TestEndpointResponseEncode(t *testing.T) {
 			Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{}`))),
 		})
 		if !defaultCalled {
-			t.Log("default endpoint not called")
-			t.Fail()
+			t.Error("default endpoint not called")
 		}
 		if rec.Code != 200 {
-			t.Logf("default HTTP response status expected: %d", rec.Code)
-			t.Fail()
+			t.Errorf("default HTTP response status expected: %d", rec.Code)
 		}
 		body := string(rec.Body.Bytes())
-		if strings.TrimSpace(body) != `"OK"` {
-			t.Logf("different body expected: %s", body)
-			t.Fail()
+		if strings.TrimSpace(body) != `"default response"` {
+			t.Errorf("different body expected: %s", body)
 		}
 	}
+	overrideCalled = false
+	defaultCalled = false
 	{
 		rec := httptest.NewRecorder()
 		HTTPTransport.ServeHTTP(rec, &http.Request{
@@ -72,17 +71,14 @@ func TestEndpointResponseEncode(t *testing.T) {
 			Body: ioutil.NopCloser(bytes.NewBuffer([]byte("OK:override"))),
 		})
 		if !overrideCalled {
-			t.Log("override endpoint not called")
-			t.Fail()
+			t.Error("override endpoint not called")
 		}
 		if rec.Code != 501 {
-			t.Logf("override HTTP response status expected: %d", rec.Code)
-			t.Fail()
+			t.Errorf("override HTTP response status expected: %d", rec.Code)
 		}
 		body := string(rec.Body.Bytes())
 		if body != "" {
-			t.Logf("different body expected: %s", body)
-			t.Fail()
+			t.Errorf("different body expected: %s", body)
 		}
 	}
 }
@@ -100,18 +96,17 @@ func TestDefaultResponseEncode(t *testing.T) {
 	HTTPTransport := NewHTTPTransport(cfg).
 		Endpoint("GET", "/test/override", func(ctx context.Context, r interface{}) (interface{}, error) {
 			overrideCalled = true
-			return "OK", nil
+			return "override response", nil
 		}, Encoder(kithttp.EncodeJSONResponse)).
 		Endpoint("GET", "/test/default", func(ctx context.Context, r interface{}) (interface{}, error) {
 			defaultCalled = true
-			return "OK", nil
+			return "default response", nil
 		})
 	err := HTTPTransport.RegisterEndpoints(func(e endpoint.Endpoint) endpoint.Endpoint {
 		return e
 	})
 	if err != nil {
-		t.Logf("error occurred: %+v", err)
-		t.Fail()
+		t.Errorf("error occurred: %+v", err)
 	}
 	{
 		rec := httptest.NewRecorder()
@@ -124,19 +119,18 @@ func TestDefaultResponseEncode(t *testing.T) {
 			Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{}`))),
 		})
 		if !defaultCalled {
-			t.Log("default endpoint not called")
-			t.Fail()
+			t.Error("default endpoint not called")
 		}
 		if rec.Code != 501 {
-			t.Logf("default HTTP response status expected: %d", rec.Code)
-			t.Fail()
+			t.Errorf("default HTTP response status expected: %d", rec.Code)
 		}
 		body := string(rec.Body.Bytes())
 		if body != "" {
-			t.Logf("different body expected: %s", body)
-			t.Fail()
+			t.Errorf("different body expected: %s", body)
 		}
 	}
+	overrideCalled = false
+	defaultCalled = false
 	{
 		rec := httptest.NewRecorder()
 		HTTPTransport.ServeHTTP(rec, &http.Request{
@@ -148,17 +142,14 @@ func TestDefaultResponseEncode(t *testing.T) {
 			Body: ioutil.NopCloser(bytes.NewBuffer([]byte("OK:override"))),
 		})
 		if !overrideCalled {
-			t.Log("override endpoint not called")
-			t.Fail()
+			t.Error("override endpoint not called")
 		}
 		if rec.Code != 200 {
-			t.Logf("override HTTP response status expected: %d", rec.Code)
-			t.Fail()
+			t.Errorf("override HTTP response status expected: %d", rec.Code)
 		}
 		body := string(rec.Body.Bytes())
-		if strings.TrimSpace(body) != `"OK"` {
-			t.Logf("different body expected: %s", body)
-			t.Fail()
+		if strings.TrimSpace(body) != `"override response"` {
+			t.Errorf("different body expected: %s", body)
 		}
 	}
 }
