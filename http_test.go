@@ -20,16 +20,12 @@ type Response struct {
 func TestEndpointResponseEncode(t *testing.T) {
 	cfg := Config{}
 	HTTPTransport := NewHTTPTransport(cfg)
-	defaultCalled := false
-	overrideCalled := false
 	HTTPTransport.Endpoint("GET", "/test/default", func(ctx context.Context, r interface{}) (interface{}, error) {
-		defaultCalled = true // this one is not in the encoder, therefore we test we have a JSON string format
 		return "default response", nil
 	}).Endpoint("GET", "/test/override", func(ctx context.Context, r interface{}) (interface{}, error) {
 		return "override response", nil
 	}, Encoder(func(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 		w.WriteHeader(501)
-		overrideCalled = true
 		return nil
 	}))
 	HTTPTransport.RegisterEndpoints(func(e endpoint.Endpoint) endpoint.Endpoint {
@@ -44,9 +40,6 @@ func TestEndpointResponseEncode(t *testing.T) {
 				Path: "/test/default",
 			},
 		})
-		if !defaultCalled {
-			t.Error("default endpoint not called")
-		}
 		if rec.Code != 200 {
 			t.Errorf("default HTTP response status expected: %d", rec.Code)
 		}
@@ -55,8 +48,6 @@ func TestEndpointResponseEncode(t *testing.T) {
 			t.Errorf("different body expected: %s", body)
 		}
 	}
-	overrideCalled = false
-	defaultCalled = false
 	{
 		rec := httptest.NewRecorder()
 		HTTPTransport.ServeHTTP(rec, &http.Request{
@@ -66,9 +57,6 @@ func TestEndpointResponseEncode(t *testing.T) {
 				Path: "/test/override",
 			},
 		})
-		if !overrideCalled {
-			t.Error("override endpoint not called")
-		}
 		if rec.Code != 501 {
 			t.Errorf("override HTTP response status expected: %d", rec.Code)
 		}
@@ -80,22 +68,16 @@ func TestEndpointResponseEncode(t *testing.T) {
 }
 
 func TestDefaultResponseEncode(t *testing.T) {
-	defaultCalled := false
-	overrideCalled := false
 	cfg := Config{
 		EncodeResponse: func(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 			w.WriteHeader(501)
-			defaultCalled = true
 			return nil
 		},
 	}
 	HTTPTransport := NewHTTPTransport(cfg).
 		Endpoint("GET", "/test/override", func(ctx context.Context, r interface{}) (interface{}, error) {
 			return "override response", nil
-		}, Encoder(func(ctx context.Context, w http.ResponseWriter, r interface{}) error {
-			overrideCalled = true
-			return kithttp.EncodeJSONResponse(ctx, w, r)
-		})).
+		}, Encoder(kithttp.EncodeJSONResponse)).
 		Endpoint("GET", "/test/default", func(ctx context.Context, r interface{}) (interface{}, error) {
 			return "default response", nil
 		})
@@ -114,9 +96,6 @@ func TestDefaultResponseEncode(t *testing.T) {
 				Path: "/test/default",
 			},
 		})
-		if !defaultCalled {
-			t.Error("default endpoint not called")
-		}
 		if rec.Code != 501 {
 			t.Errorf("default HTTP response status expected: %d", rec.Code)
 		}
@@ -125,8 +104,6 @@ func TestDefaultResponseEncode(t *testing.T) {
 			t.Errorf("different body expected: %s", body)
 		}
 	}
-	overrideCalled = false
-	defaultCalled = false
 	{
 		rec := httptest.NewRecorder()
 		HTTPTransport.ServeHTTP(rec, &http.Request{
@@ -136,9 +113,6 @@ func TestDefaultResponseEncode(t *testing.T) {
 				Path: "/test/override",
 			},
 		})
-		if !overrideCalled {
-			t.Error("override endpoint not called")
-		}
 		if rec.Code != 200 {
 			t.Errorf("override HTTP response status expected: %d", rec.Code)
 		}
