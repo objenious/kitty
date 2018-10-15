@@ -101,7 +101,7 @@ t := kitty.NewTransport(kitty.Config{}).Liveness(health.LiveEndpoint).Readiness(
 
 ### Use Google Pub/Sub as a transport
 
-github.com/objenious/kitty-gcp adds a Google Pub/Sub transport to kitty:
+https://github.com/objenious/kitty-gcp adds a Google Pub/Sub transport to kitty:
 ```
 import "github.com/objenious/kitty-gcp/pubsub"
 
