@@ -13,7 +13,7 @@ Kitty is a slightly opinionated framework based on go-kit.
 It's goal is to ease development of microservices deployed on Kubernetes (or any similar orchestration platform).
 
 Kitty has an opinion on:
-* transports: HTTP only (additional transports can be added as long as they implement kitty.Transport),
+* transports: HTTP only (additional transports can be added as long as they implement kitty.Transport, a Google Pub/Sub transport is available as a separate package),
 * errors: an error may be Retryable (e.g. 5XX status codes) or not (e.g. 4XX status codes),
 * status codes: unless specified, request decoding errors will generate 400 HTTP status codes.
 
