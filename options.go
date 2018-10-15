@@ -1,9 +1,9 @@
 package kitty
 
-import "github.com/go-kit/kit/transport/http"
+import kithttp "github.com/go-kit/kit/transport/http"
 
-// HTTPOptions defines the list of go-kit http.ServerOption to be added to all endpoints.
-func (s *Server) HTTPOptions(opts ...http.ServerOption) *Server {
-	s.opts = opts
-	return s
+// Options defines the list of go-kit http.ServerOption to be added to all endpoints.
+func (t *HTTPTransport) Options(opts ...kithttp.ServerOption) *HTTPTransport {
+	t.opts = opts
+	return t
 }

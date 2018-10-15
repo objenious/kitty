@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
-	httptransport "github.com/go-kit/kit/transport/http"
+	kithttp "github.com/go-kit/kit/transport/http"
 )
 
 // httpendpoint encapsulates everything required to build
@@ -13,31 +13,29 @@ import (
 type httpendpoint struct {
 	method, path string
 	endpoint     endpoint.Endpoint
-	decoder      httptransport.DecodeRequestFunc
-	encoder      httptransport.EncodeResponseFunc
-	options      []httptransport.ServerOption
+	decoder      kithttp.DecodeRequestFunc
+	encoder      kithttp.EncodeResponseFunc
+	options      []kithttp.ServerOption
 }
 
 // HTTPEndpointOption is an option for an HTTP endpoint
 type HTTPEndpointOption func(*httpendpoint) *httpendpoint
 
-// HTTPEndpoint registers an endpoint to a kitty.Server.
-// Unless specified, the endpoint will use the POST method,
-// NopRequestDecoder will decode the request (and do nothing),
+// Endpoint registers an endpoint to a kitty.HTTPTransport.
+// Unless specified, NopRequestDecoder will decode the request (and do nothing),
 // and EncodeJSONResponse will encode the response.
-func (s *Server) HTTPEndpoint(method, path string, ep endpoint.Endpoint, opts ...HTTPEndpointOption) *Server {
+func (t *HTTPTransport) Endpoint(method, path string, ep endpoint.Endpoint, opts ...HTTPEndpointOption) *HTTPTransport {
 	e := &httpendpoint{
 		method:   method,
 		path:     path,
 		endpoint: ep,
-		decoder:  httptransport.NopRequestDecoder,
-		encoder:  httptransport.EncodeJSONResponse,
+		decoder:  kithttp.NopRequestDecoder,
 	}
 	for _, opt := range opts {
 		e = opt(e)
 	}
-	s.endpoints = append(s.endpoints, e)
-	return s
+	t.endpoints = append(t.endpoints, e)
+	return t
 }
 
 type decoderError struct {
@@ -45,15 +43,15 @@ type decoderError struct {
 }
 
 func (e decoderError) StatusCode() int {
-	if err, ok := e.error.(httptransport.StatusCoder); ok {
+	if err, ok := e.error.(kithttp.StatusCoder); ok {
 		return err.StatusCode()
 	}
 	return http.StatusBadRequest
 }
 
-// Decoder defines the request decoder for an endpoint.
+// Decoder defines the request decoder for a HTTP endpoint.
 // If none is provided, NopRequestDecoder is used.
-func Decoder(dec httptransport.DecodeRequestFunc) HTTPEndpointOption {
+func Decoder(dec kithttp.DecodeRequestFunc) HTTPEndpointOption {
 	return func(e *httpendpoint) *httpendpoint {
 		e.decoder = func(ctx context.Context, r *http.Request) (interface{}, error) {
 			request, err := dec(ctx, r)
@@ -66,17 +64,17 @@ func Decoder(dec httptransport.DecodeRequestFunc) HTTPEndpointOption {
 	}
 }
 
-// Encoder defines the response encoder for an endpoint.
+// Encoder defines the response encoder for a HTTP endpoint.
 // If none is provided, EncodeJSONResponse is used.
-func Encoder(enc httptransport.EncodeResponseFunc) HTTPEndpointOption {
+func Encoder(enc kithttp.EncodeResponseFunc) HTTPEndpointOption {
 	return func(e *httpendpoint) *httpendpoint {
 		e.encoder = enc
 		return e
 	}
 }
 
-// ServerOptions defines a liste of go-kit ServerOption to be used by the endpoint.
-func ServerOptions(opts ...httptransport.ServerOption) HTTPEndpointOption {
+// ServerOptions defines a liste of go-kit ServerOption to be used by a HTTP endpoint.
+func ServerOptions(opts ...kithttp.ServerOption) HTTPEndpointOption {
 	return func(e *httpendpoint) *httpendpoint {
 		e.options = opts
 		return e

@@ -1,9 +1,10 @@
-// Kitty is a slightly opinionated framework based on go-kit.
+// Package kitty is a slightly opinionated framework based on go-kit.
 // It's goal is to ease development of services deployed on Kubernetes (or any similar orchestration platform).
 //
 // Kitty has an opinion on:
 //
-// * transports: only HTTP is supported.
+// * transports: HTTP only (additional transports can be added as long as they implement kitty.Transport),
+// * errors: an error may be Retryable (e.g. 5XX status codes) or not (e.g. 4XX status codes).
 //
 // Kitty has no opinion on:
 //

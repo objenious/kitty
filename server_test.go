@@ -12,11 +12,15 @@ import (
 )
 
 func TestServer(t *testing.T) {
+	shutdownCalled := false
 	ctx, cancel := context.WithCancel(context.TODO())
 	exitError := make(chan error)
-	srv := NewServer().
-		HTTPEndpoint("POST", "/foo", testEP, Decoder(goodDecoder)).
-		HTTPEndpoint("GET", "/decoding_error", testEP, Decoder(badDecoder))
+	tr := NewHTTPTransport(DefaultConfig).
+		Endpoint("POST", "/foo", testEP, Decoder(goodDecoder)).
+		Endpoint("GET", "/decoding_error", testEP, Decoder(badDecoder))
+	srv := NewServer(tr).Shutdown(func() {
+		shutdownCalled = true
+	})
 	go func() {
 		exitError <- srv.Run(ctx)
 	}()
@@ -45,6 +49,9 @@ func TestServer(t *testing.T) {
 		if err != nil {
 			t.Errorf("http.Get returned an error : %s", err)
 		} else {
+			if resp.StatusCode != 200 {
+				t.Errorf("receive a %d status instead of 200", resp.StatusCode)
+			}
 			resData := testStruct{}
 			err := json.NewDecoder(resp.Body).Decode(&resData)
 			resp.Body.Close()
@@ -52,6 +59,17 @@ func TestServer(t *testing.T) {
 				t.Errorf("json.Decode returned an error : %s", err)
 			} else if !reflect.DeepEqual(resData, testStruct{Foo: "bar"}) {
 				t.Errorf("http.Get returned invalid data : %+v", resData)
+			}
+		}
+	}
+
+	{
+		resp, err := http.Post("http://localhost:8080/foo", "application/json", bytes.NewBufferString(`{"status":404}`))
+		if err != nil {
+			t.Errorf("http.Get returned an error : %s", err)
+		} else {
+			if resp.StatusCode != 404 {
+				t.Errorf("receive a %d status instead of 404", resp.StatusCode)
 			}
 		}
 	}
@@ -77,13 +95,20 @@ func TestServer(t *testing.T) {
 			t.Errorf("Server.Run returned an error : %s", err)
 		}
 	}
+	if !shutdownCalled {
+		t.Error("Shutdown functions are not called")
+	}
 }
 
 type testStruct struct {
-	Foo string `json:"foo"`
+	Foo    string `json:"foo"`
+	Status int    `json:"status"`
 }
 
 func testEP(_ context.Context, req interface{}) (interface{}, error) {
+	if r, ok := req.(*testStruct); ok && r.Status != 0 {
+		return nil, httpError(r.Status)
+	}
 	return req, nil
 }
 

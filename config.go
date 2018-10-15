@@ -1,6 +1,8 @@
 package kitty
 
-// Config holds configuration info for a kitty.Server.
+import kithttp "github.com/go-kit/kit/transport/http"
+
+// Config holds configuration info for kitty.HTTPTransport.
 type Config struct {
 	// LivenessCheckPath is the path of the health handler (default: "/alivez").
 	LivenessCheckPath string
@@ -10,27 +12,15 @@ type Config struct {
 	HTTPPort int
 	// EnablePProf enables pprof urls (default: false).
 	EnablePProf bool
+	// EncodeResponse defines the default response encoder for all endpoints (by default: EncodeJSONResponse). It can be overriden for a specific endpoint.
+	EncodeResponse kithttp.EncodeResponseFunc
 }
 
-// Config defines the configuration to be used by a kitty server.
-func (s *Server) Config(cfg Config) *Server {
-	if cfg.HTTPPort > 0 {
-		s.cfg.HTTPPort = cfg.HTTPPort
-	}
-	if cfg.LivenessCheckPath != "" {
-		s.cfg.LivenessCheckPath = cfg.LivenessCheckPath
-	}
-	if cfg.ReadinessCheckPath != "" {
-		s.cfg.ReadinessCheckPath = cfg.ReadinessCheckPath
-	}
-	s.cfg.EnablePProf = cfg.EnablePProf
-	return s
-}
-
-// DefaultConfig defines the default config of a kitty.Server.
+// DefaultConfig defines the default config of kitty.HTTPTransport.
 var DefaultConfig = Config{
 	HTTPPort:           8080,
 	LivenessCheckPath:  "/alivez",
 	ReadinessCheckPath: "/readyz",
 	EnablePProf:        false,
+	EncodeResponse:     kithttp.EncodeJSONResponse,
 }
