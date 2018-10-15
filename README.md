@@ -96,6 +96,17 @@ health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(db, 1*time.Se
 kitty.NewServer().Liveness(health.LiveEndpoint).Readiness(health.ReadyEndpoint)
 ```
 
+### Use Google Pub/Sub as a transport
+
+github.com/objenious/kitty-gcp adds a Google Pub/Sub transport to kitty:
+```
+import "github.com/objenious/kitty-gcp/pubsub"
+
+tr := pubsub.NewTransport(ctx, "project-id").
+  Endpoint(subscriptionName, endpoint, Decoder(decodeFunc))
+err := kitty.NewServer(tr).Run(ctx)
+```
+
 ## Requirements
 
 Go > 1.8
