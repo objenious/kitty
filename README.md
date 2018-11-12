@@ -13,7 +13,7 @@ Kitty is a slightly opinionated framework based on go-kit.
 It's goal is to ease development of microservices deployed on Kubernetes (or any similar orchestration platform).
 
 Kitty has an opinion on:
-* transports: HTTP only (additional transports can be added as long as they implement kitty.Transport),
+* transports: HTTP only (additional transports can be added as long as they implement kitty.Transport, a Google Pub/Sub transport is available as a separate package),
 * errors: an error may be Retryable (e.g. 5XX status codes) or not (e.g. 4XX status codes),
 * status codes: unless specified, request decoding errors will generate 400 HTTP status codes.
 
@@ -97,6 +97,17 @@ health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(1
 health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(db, 1*time.Second))
 
 t := kitty.NewTransport(kitty.Config{}).Liveness(health.LiveEndpoint).Readiness(health.ReadyEndpoint)
+```
+
+### Use Google Pub/Sub as a transport
+
+https://github.com/objenious/kitty-gcp adds a Google Pub/Sub transport to kitty:
+```
+import "github.com/objenious/kitty-gcp/pubsub"
+
+tr := pubsub.NewTransport(ctx, "project-id").
+  Endpoint(subscriptionName, endpoint, Decoder(decodeFunc))
+err := kitty.NewServer(tr).Run(ctx)
 ```
 
 ## Requirements
