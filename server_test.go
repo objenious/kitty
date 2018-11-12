@@ -139,9 +139,7 @@ type workingTransport struct {
 
 func (*workingTransport) RegisterEndpoints(m endpoint.Middleware) error { return nil }
 func (t *workingTransport) Start(ctx context.Context) error {
-	defer func() {
-		close(t.running)
-		}()
+	defer func() { close(t.running) }()
 	<-ctx.Done()
 	return nil
 }
