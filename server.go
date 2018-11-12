@@ -40,6 +40,8 @@ func NewServer(t ...Transport) *Server {
 
 // Run starts the server.
 func (s *Server) Run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	stop := make(chan error)
 	exit := make(chan error)
 	ctx = s.addLoggerToContext(ctx, nil)
