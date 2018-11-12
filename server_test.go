@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/go-kit/kit/endpoint"
 )
 
 func TestServer(t *testing.T) {
@@ -120,4 +122,50 @@ func goodDecoder(_ context.Context, r *http.Request) (interface{}, error) {
 
 func badDecoder(_ context.Context, _ *http.Request) (interface{}, error) {
 	return nil, errors.New("decoding error")
+}
+
+type failingTransport struct {
+	Transport
+}
+
+func (*failingTransport) RegisterEndpoints(m endpoint.Middleware) error { return nil }
+func (*failingTransport) Start(ctx context.Context) error               { return errors.New("unable to start") }
+func (*failingTransport) Shutdown(ctx context.Context) error            { return nil }
+
+type workingTransport struct {
+	running chan struct{}
+	Transport
+}
+
+func (*workingTransport) RegisterEndpoints(m endpoint.Middleware) error { return nil }
+func (t *workingTransport) Start(ctx context.Context) error {
+	defer func() { close(t.running) }()
+	<-ctx.Done()
+	return nil
+}
+func (*workingTransport) Shutdown(ctx context.Context) error { return nil }
+
+func TestStartError(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancel()
+	exitError := make(chan error)
+	wt := &workingTransport{running: make(chan struct{})}
+	srv := NewServer(&failingTransport{}, wt)
+	go func() {
+		exitError <- srv.Run(ctx)
+	}()
+
+	select {
+	case <-ctx.Done():
+		t.Error("Server.Run has not stopped after 5sec")
+	case err := <-exitError:
+		if err == nil || err.Error() != "unable to start" {
+			t.Errorf("Server.Run returned an invalid error : %v", err)
+		}
+	}
+	select {
+	case <-ctx.Done():
+		t.Error("Alternate transport has not stopped after 5sec")
+	case <-wt.running:
+	}
 }

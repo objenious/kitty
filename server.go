@@ -20,9 +20,6 @@ type Server struct {
 	logger  log.Logger
 
 	transports []Transport
-
-	// exit chan for graceful shutdown
-	exit chan chan error
 }
 
 type contextKey int
@@ -36,7 +33,6 @@ const (
 func NewServer(t ...Transport) *Server {
 	return &Server{
 		transports: t,
-		exit:       make(chan chan error),
 		logger:     &nopLogger{},
 		middleware: nopMiddleware,
 	}
@@ -44,6 +40,10 @@ func NewServer(t ...Transport) *Server {
 
 // Run starts the server.
 func (s *Server) Run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	stop := make(chan error)
+	exit := make(chan error)
 	ctx = s.addLoggerToContext(ctx, nil)
 	for _, t := range s.transports {
 		m := s.addLoggerToContextMiddleware(s.middleware, t)
@@ -55,19 +55,18 @@ func (s *Server) Run(ctx context.Context) error {
 		go func(t Transport) {
 			if err := t.Start(ctx); err != nil {
 				_ = s.logger.Log("msg", fmt.Sprintf("Shutting down due to server error: %s", err))
-				_ = s.stop()
+				stop <- err
 			}
 		}(t)
 	}
 
 	go func() {
-		exit := <-s.exit
+		err := <-stop
 		for _, fn := range s.shutdown {
 			fn()
 		}
-		var err error
 		for _, t := range s.transports {
-			if eerr := t.Shutdown(ctx); eerr != nil {
+			if eerr := t.Shutdown(ctx); eerr != nil && err == nil {
 				err = eerr
 			}
 		}
@@ -81,12 +80,9 @@ func (s *Server) Run(ctx context.Context) error {
 		_ = s.logger.Log("msg", "received signal", "signal", sig)
 	case <-ctx.Done():
 		_ = s.logger.Log("msg", "canceled context")
+	case err := <-exit:
+		return err
 	}
-	return s.stop()
-}
-
-func (s *Server) stop() error {
-	ch := make(chan error)
-	s.exit <- ch
-	return <-ch
+	stop <- nil
+	return <-exit
 }
