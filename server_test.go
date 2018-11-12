@@ -139,20 +139,19 @@ type workingTransport struct {
 
 func (*workingTransport) RegisterEndpoints(m endpoint.Middleware) error { return nil }
 func (t *workingTransport) Start(ctx context.Context) error {
-	t.running = make(chan struct{})
 	defer func() {
 		close(t.running)
-	}()
+		}()
 	<-ctx.Done()
 	return nil
 }
 func (*workingTransport) Shutdown(ctx context.Context) error { return nil }
 
 func TestStartError(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 	exitError := make(chan error)
-	wt := &workingTransport{}
+	wt := &workingTransport{running: make(chan struct{})}
 	srv := NewServer(&failingTransport{}, wt)
 	go func() {
 		exitError <- srv.Run(ctx)
@@ -160,7 +159,7 @@ func TestStartError(t *testing.T) {
 
 	select {
 	case <-ctx.Done():
-		t.Error("Server.Run has not stopped after 30sec")
+		t.Error("Server.Run has not stopped after 5sec")
 	case err := <-exitError:
 		if err == nil || err.Error() != "unable to start" {
 			t.Errorf("Server.Run returned an invalid error : %v", err)
@@ -168,7 +167,7 @@ func TestStartError(t *testing.T) {
 	}
 	select {
 	case <-ctx.Done():
-		t.Error("Alternate transport has not stopped after 30sec")
+		t.Error("Alternate transport has not stopped after 5sec")
 	case <-wt.running:
 	}
 }
