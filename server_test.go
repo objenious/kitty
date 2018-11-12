@@ -149,7 +149,7 @@ func (t *workingTransport) Start(ctx context.Context) error {
 func (*workingTransport) Shutdown(ctx context.Context) error { return nil }
 
 func TestStartError(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer cancel()
 	exitError := make(chan error)
 	wt := &workingTransport{}
@@ -160,7 +160,7 @@ func TestStartError(t *testing.T) {
 
 	select {
 	case <-ctx.Done():
-		t.Error("Server.Run has not stopped after 1sec")
+		t.Error("Server.Run has not stopped after 30sec")
 	case err := <-exitError:
 		if err == nil || err.Error() != "unable to start" {
 			t.Errorf("Server.Run returned an invalid error : %v", err)
@@ -168,7 +168,7 @@ func TestStartError(t *testing.T) {
 	}
 	select {
 	case <-ctx.Done():
-		t.Error("Alternate transport has not stopped after 1sec")
+		t.Error("Alternate transport has not stopped after 30sec")
 	case <-wt.running:
 	}
 }
