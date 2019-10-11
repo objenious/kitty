@@ -28,7 +28,8 @@ func NewClient(
 	return &Client{Client: kithttp.NewClient(method, tgt, enc, makeDecodeResponseFunc(dec), options...)}
 }
 
-// NewClientWithError creates a kitty client that decode error.
+// NewClientWithError creates a kitty client that doesn't deal with HTTP errors.
+// and let you do it while you decode.
 func NewClientWithError(
 	method string,
 	tgt *url.URL,
