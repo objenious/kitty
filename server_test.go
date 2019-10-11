@@ -105,6 +105,8 @@ func TestServer(t *testing.T) {
 type testStruct struct {
 	Foo    string `json:"foo"`
 	Status int    `json:"status"`
+
+	err    error
 }
 
 func testEP(_ context.Context, req interface{}) (interface{}, error) {
