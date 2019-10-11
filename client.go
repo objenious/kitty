@@ -28,6 +28,18 @@ func NewClient(
 	return &Client{Client: kithttp.NewClient(method, tgt, enc, makeDecodeResponseFunc(dec), options...)}
 }
 
+// NewClientWithError creates a kitty client that doesn't deal with HTTP errors.
+// and let you do it while you decode.
+func NewClientWithError(
+	method string,
+	tgt *url.URL,
+	enc kithttp.EncodeRequestFunc,
+	dec kithttp.DecodeResponseFunc,
+	options ...kithttp.ClientOption,
+) *Client {
+	return &Client{Client: kithttp.NewClient(method, tgt, enc, dec, options...)}
+}
+
 // makeDecodeResponseFunc maps HTTP errors to Go errors.
 func makeDecodeResponseFunc(fn kithttp.DecodeResponseFunc) kithttp.DecodeResponseFunc {
 	return func(ctx context.Context, resp *http.Response) (interface{}, error) {
