@@ -5,10 +5,6 @@
 
 `go get github.com/objenious/kitty`
 
-## Status: beta - breaking changes might happen
-
-*Warning: Breaking changes in 0.0.4, with the addition of transports*
-
 Kitty is a slightly opinionated framework based on go-kit.
 It's goal is to ease development of microservices deployed on Kubernetes (or any similar orchestration platform).
 
@@ -112,7 +108,7 @@ err := kitty.NewServer(tr).Run(ctx)
 
 ## Requirements
 
-Go > 1.8
+Go > 1.11
 
 ## Contribution guidelines
 
