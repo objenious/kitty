@@ -1,6 +1,9 @@
 package kitty
 
-import "net/http"
+import (
+	"net/http"
+	"errors"
+)
 
 // Retryabler defines an error that may be temporary. A function returning a retryable error may be executed again.
 type Retryabler interface {
@@ -82,4 +85,8 @@ func (err httpError) Retryable() bool {
 	default:
 		return false
 	}
+}
+
+func (err httpError) Cause() error {
+	return errors.New(err.Error())
 }
