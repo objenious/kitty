@@ -5,6 +5,7 @@ import "net/http"
 // Retryabler defines an error that may be temporary. A function returning a retryable error may be executed again.
 type Retryabler interface {
 	Retryable() bool
+	Cause() error
 }
 
 // IsRetryable checks if an error is retryable (i.e. implements Retryabler and Retryable returns true).
@@ -30,6 +31,10 @@ func IsRetryable(err error) bool {
 
 type retryableError struct {
 	error
+}
+
+func (e retryableError) Cause() error {
+	return e.error
 }
 
 func (retryableError) Retryable() bool {
