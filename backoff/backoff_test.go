@@ -2,16 +2,21 @@ package backoff
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/cenkalti/backoff"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/objenious/kitty"
 )
 
 type retryableError struct{}
 
 func (*retryableError) Error() string   { return "error" }
 func (*retryableError) Retryable() bool { return true }
+func (*retryableError) Cause() error    { return errors.New("error") }
+
+var _ kitty.Retryabler = &retryableError{}
 
 type nonRetryableError struct{}
 
